@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fake News Detector - AI-Powered Verification</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+        }
+
+        .language-switch {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .language-switch label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .language-switch input[type="radio"] {
+            display: none;
+        }
+
+        .language-switch label {
+            background: #f0f0f0;
+            color: #666;
+            border: 2px solid transparent;
+        }
+
+        .language-switch input[type="radio"]:checked + label {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .language-switch label:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .textarea-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 15px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .placeholder-text {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #999;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus + .placeholder-text,
+        textarea:not(:placeholder-shown) + .placeholder-text {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        .verify-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .verify-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .verify-btn:active {
+            transform: translateY(0);
+        }
+
+        .verify-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Popup Styles */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .popup {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            animation: popupSlideIn 0.3s ease;
+        }
+
+        @keyframes popupSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .result-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .result-description {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .close-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+
+        /* Real News Styles */
+        .real-news .result-icon {
+            color: #28a745;
+        }
+
+        .real-news .result-title {
+            color: #28a745;
+        }
+
+        /* Fake News Styles */
+        .fake-news .result-icon {
+            color: #dc3545;
+        }
+
+        .fake-news .result-title {
+            color: #dc3545;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+            
+            textarea {
+                min-height: 150px;
+                padding: 15px;
+            }
+            
+            .verify-btn {
+                padding: 12px 30px;
+                font-size: 16px;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🔍 Fake News Detector</div>
+        </div>
+
+        <div class="language-switch">
+            <input type="radio" id="lang-en" name="language" value="en" checked>
+            <label for="lang-en">🇺🇸 English</label>
+            <input type="radio" id="lang-ar" name="language" value="ar">
+            <label for="lang-ar">🇸🇦 العربية</label>
+        </div>
+
+        <div class="input-section">
+            <div class="textarea-container">
+                <textarea id="articleInput" placeholder="Paste your article text here..."></textarea>
+                <div class="placeholder-text">Paste your article text here...</div>
+            </div>
+            
+            <button class="verify-btn" id="verifyBtn" onclick="verifyArticle()">
+                🔍 Verify Article
+            </button>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing article...</p>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Real News Popup -->
+    <div class="popup-overlay" id="realNewsPopup">
+        <div class="popup real-news">
+            <div class="result-icon">✅</div>
+            <div class="result-title">Real News</div>
+            <div class="result-description">
+                Our AI analysis indicates this article appears to be from a credible source with factual content.
+            </div>
+            <button class="close-btn" onclick="closePopup()">Continue</button>
+        </div>
+    </div>
+
+    <!-- Fake News Popup -->
+    <div class="popup-overlay" id="fakeNewsPopup">
+        <div class="popup fake-news">
+            <div class="result-icon">⚠️</div>
+            <div class="result-title">Fake News</div>
+            <div class="result-description">
+                Our AI has detected potential misinformation. Please verify this information from multiple credible sources.
+            </div>
+            <button class="close-btn" onclick="closePopup()">Continue</button>
+        </div>
+    </div>
+
+    <script>
+
+        
+        function showResult(isReal) {
+            if (isReal) {
+                document.getElementById('realNewsPopup').style.display = 'flex';
+            } else {
+                document.getElementById('fakeNewsPopup').style.display = 'flex';
+            }
+        }
+        
+        function closePopup() {
+            document.getElementById('realNewsPopup').style.display = 'none';
+            document.getElementById('fakeNewsPopup').style.display = 'none';
+        }
+        
+        // Close popup when clicking outside
+        document.querySelectorAll('.popup-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    closePopup();
+                }
+            });
+        });
+        
+        // Handle textarea placeholder
+        const textarea = document.getElementById('articleInput');
+        textarea.addEventListener('input', function() {
+            if (this.value.length > 0) {
+                this.classList.add('has-content');
+            } else {
+                this.classList.remove('has-content');
+            }
+        });
+
+        // Language switching functionality
+        const languageRadios = document.querySelectorAll('input[name="language"]');
+        const texts = {
+            en: {
+                title: "🔍 Fake News Detector",
+                placeholder: "Paste your article text here...",
+                verifyBtn: "🔍 Verify Article",
+                loading: "Analyzing article...",
+                realNewsTitle: "Real News",
+                realNewsDesc: "Our AI analysis indicates this article appears to be from a credible source with factual content.",
+                fakeNewsTitle: "Fake News",
+                fakeNewsDesc: "Our AI has detected potential misinformation. Please verify this information from multiple credible sources.",
+                continue: "Continue",
+                emptyInput: "Please enter an article to verify."
+            },
+            ar: {
+                title: "🔍 كاشف الأخبار المزيفة",
+                placeholder: "الصق نص المقال هنا...",
+                verifyBtn: "🔍 تحقق من المقال",
+                loading: "جاري تحليل المقال...",
+                realNewsTitle: "أخبار حقيقية",
+                realNewsDesc: "يشير تحليل الذكاء الاصطناعي لدينا إلى أن هذا المقال يبدو أنه من مصدر موثوق بمحتوى واقعي.",
+                fakeNewsTitle: "أخبار مزيفة",
+                fakeNewsDesc: "اكتشف الذكاء الاصطناعي لدينا معلومات مضللة محتملة. يرجى التحقق من هذه المعلومات من مصادر موثوقة متعددة.",
+                continue: "متابعة",
+                emptyInput: "يرجى إدخال مقال للتحقق منه."
+            }
+        };
+
+        function updateLanguage(lang) {
+            // Update title
+            document.querySelector('.logo').textContent = texts[lang].title;
+            
+            // Update textarea placeholder
+            textarea.placeholder = texts[lang].placeholder;
+            document.querySelector('.placeholder-text').textContent = texts[lang].placeholder;
+            
+            // Update button text
+            document.getElementById('verifyBtn').textContent = texts[lang].verifyBtn;
+            
+            // Update loading text
+            document.querySelector('#loading p').textContent = texts[lang].loading;
+            
+            // Update popup texts
+            document.querySelector('#realNewsPopup .result-title').textContent = texts[lang].realNewsTitle;
+            document.querySelector('#realNewsPopup .result-description').textContent = texts[lang].realNewsDesc;
+            document.querySelector('#realNewsPopup .close-btn').textContent = texts[lang].continue;
+            
+            document.querySelector('#fakeNewsPopup .result-title').textContent = texts[lang].fakeNewsTitle;
+            document.querySelector('#fakeNewsPopup .result-description').textContent = texts[lang].fakeNewsDesc;
+            document.querySelector('#fakeNewsPopup .close-btn').textContent = texts[lang].continue;
+            
+            // Update body direction for Arabic
+            if (lang === 'ar') {
+                document.body.style.direction = 'rtl';
+                document.body.style.textAlign = 'right';
+            } else {
+                document.body.style.direction = 'ltr';
+                document.body.style.textAlign = 'left';
+            }
+        }
+
+        // Add event listeners for language switching
+        languageRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                updateLanguage(this.value);
+            });
+        });
+
+        // Update verifyArticle function to use current language
+        function verifyArticle() {
+            const articleInput = document.getElementById('articleInput');
+            const verifyBtn = document.getElementById('verifyBtn');
+            const loading = document.getElementById('loading');
+            const currentLang = document.querySelector('input[name="language"]:checked').value;
+            
+            if (!articleInput.value.trim()) {
+                alert(texts[currentLang].emptyInput);
+                return;
+            }
+            
+            // Show loading state
+            verifyBtn.disabled = true;
+            loading.style.display = 'block';
+            
+            // Simulate API call (replace with actual API call later)
+            setTimeout(() => {
+                // For now, randomly show real or fake news
+                const isReal = Math.random() > 0.5;
+                showResult(isReal);
+                
+                // Reset UI
+                verifyBtn.disabled = false;
+                loading.style.display = 'none';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
