@@ -333,9 +333,7 @@
         <div class="popup real-news">
             <div class="result-icon">✅</div>
             <div class="result-title">Real News</div>
-            <div class="result-description">
-                Our AI analysis indicates this article appears to be from a credible source with factual content.
-            </div>
+         
             <button class="close-btn" onclick="closePopup()">Continue</button>
         </div>
     </div>
@@ -345,9 +343,6 @@
         <div class="popup fake-news">
             <div class="result-icon">⚠️</div>
             <div class="result-title">Fake News</div>
-            <div class="result-description">
-                Our AI has detected potential misinformation. Please verify this information from multiple credible sources.
-            </div>
             <button class="close-btn" onclick="closePopup()">Continue</button>
         </div>
     </div>
@@ -472,16 +467,42 @@
             verifyBtn.disabled = true;
             loading.style.display = 'block';
             
-            // Simulate API call (replace with actual API call later)
-            setTimeout(() => {
-                // For now, randomly show real or fake news
-                const isReal = Math.random() > 0.5;
+            // Prepare the request data
+            const requestData = {
+                language: currentLang,
+                textContent: articleInput.value.trim()
+            };
+            
+            // Make API call to Flask backend
+            fetch('http://localhost:5000/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Response:', data);
+                // Handle the prediction result
+                const isReal = data.prediction === 'Real';
                 showResult(isReal);
-                
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                console.error('Error details:', error.message);
+                alert('An error occurred while analyzing the article. Please try again.\n\nError: ' + error.message);
+            })
+            .finally(() => {
                 // Reset UI
                 verifyBtn.disabled = false;
                 loading.style.display = 'none';
-            }, 2000);
+            });
         }
     </script>
 </body>
