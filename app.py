@@ -7,9 +7,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 app = Flask(__name__)
 CORS(app) 
 
-# Load models only
+# Load models and vectorizers
 ar_model = joblib.load('ar_model.pkl')
 en_model = joblib.load('en_model.pkl')
+ar_vectorizer = joblib.load('ar_vectorizer.pkl')
+en_vectorizer = joblib.load('en_vectorizer.pkl')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -24,19 +26,13 @@ def predict():
 
     try:
         if language == 'ar':
-            # Arabic stopwords
-            arabic_stopwords = [
-      "في", "من", "على", "إلى", "و", "عن", "أن", "إن", "كان", "هذه", "هذا", "ما", "لا", "لم", "لن", "قد",
-      "هل", "هو", "هي", "ثم", "ذلك", "كل", "أو", "أي", "أين", "كيف", "لماذا", "متى", "ب", "ل", "حتى", "كما"
-            ]
-            vectorizer = TfidfVectorizer(stop_words=arabic_stopwords, max_df=0.7)
-            text_vector = vectorizer.transform([text])  # transform to numeric
-            
+            # Use the loaded Arabic vectorizer
+            text_vector = ar_vectorizer.transform([text])
             prediction = ar_model.predict(text_vector)[0]
             result = 'Fake' if prediction == 0 else 'Real'
         elif language == 'en':
-            vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
-            text_vector = vectorizer.transform([text])  # transform to numeric
+            # Use the loaded English vectorizer
+            text_vector = en_vectorizer.transform([text])
             prediction = en_model.predict(text_vector)[0]
             result = 'Fake' if prediction == 0 else 'Real'
         else:

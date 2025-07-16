@@ -143,5 +143,8 @@ print("Model Accuracy:", accuracy)
 import joblib  # to save and load model
 from google.colab import files
 
+# Save both model and vectorizer
 joblib.dump(model, 'ar_model.pkl')
+joblib.dump(vectorizer, 'ar_vectorizer.pkl')
 files.download('ar_model.pkl')
+files.download('ar_vectorizer.pkl')

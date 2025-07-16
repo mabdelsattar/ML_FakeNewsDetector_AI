@@ -19,7 +19,7 @@ from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, confusion_matrix
 from sklearn.feature_extraction.text import TfidfVectorizer
-
+import numpy as np
 
 # Download latest version
 fake_df = pd.read_csv('/kaggle/input/fake-news-detection-datasets/News _dataset/Fake.csv')
@@ -36,12 +36,14 @@ x = df['text']
 y = df['label']
 # y.head()
 X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
-# Convert text to numeric features
+
+# Convert text to numeric features using TfidfVectorizer
+print("Converting text to TF-IDF features...")
 vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
 X_train_tfidf = vectorizer.fit_transform(X_train)
 X_test_tfidf = vectorizer.transform(X_test)
 
-model = LogisticRegression()
+model = LogisticRegression(random_state=42, max_iter=1000)
 model.fit(X_train_tfidf, y_train)
 
 # Predict
@@ -49,12 +51,12 @@ y_pred = model.predict(X_test_tfidf)
 accuracy = accuracy_score(y_test, y_pred)
 print("Model Accuracy:", accuracy)
 
-# # Example prediction function
-# def predict_news(text):
-#     print(text)
-#     text_vector = vectorizer.transform([text])  # transform to numeric
-#     prediction = model.predict(text_vector)#X_test_tfidf[1]
-#     return "Fake News" if prediction[0] == 0 else "Real News"
+# Example prediction function
+def predict_news(text):
+    print(text)
+    text_vector = vectorizer.transform([text])  # transform to numeric
+    prediction = model.predict(text_vector)
+    return "Fake News" if prediction[0] == 0 else "Real News"
 
 # while True:
 #   user_input = input("\nEnter a news article (or type 'exit'): ")
@@ -65,5 +67,8 @@ print("Model Accuracy:", accuracy)
 import joblib  # to save and load model
 from google.colab import files
 
+# Save both model and vectorizer
 joblib.dump(model, 'en_model.pkl')
+joblib.dump(vectorizer, 'en_vectorizer.pkl')
 files.download('en_model.pkl')
+files.download('en_vectorizer.pkl')
