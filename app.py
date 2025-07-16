@@ -26,20 +26,22 @@ def predict():
         if language == 'ar':
             # Arabic stopwords
             arabic_stopwords = [
-                "في", "من", "على", "إلى", "و", "عن", "أن", "إن", "كان", "هذه", "هذا", "ما", "لا", "لم", "لن", "قد",
-                "هل", "هو", "هي", "ثم", "ذلك", "كل", "أو", "أي", "أين", "كيف", "لماذا", "متى", "ب", "ل", "حتى", "كما"
+      "في", "من", "على", "إلى", "و", "عن", "أن", "إن", "كان", "هذه", "هذا", "ما", "لا", "لم", "لن", "قد",
+      "هل", "هو", "هي", "ثم", "ذلك", "كل", "أو", "أي", "أين", "كيف", "لماذا", "متى", "ب", "ل", "حتى", "كما"
             ]
-            vectorizer = TfidfVectorizer(stop_words=arabic_stopwords)
-            text_vector = vectorizer.fit_transform([text])  # transform to numeric
+            vectorizer = TfidfVectorizer(stop_words=arabic_stopwords, max_df=0.7)
+            text_vector = vectorizer.transform([text])  # transform to numeric
+            
             prediction = ar_model.predict(text_vector)[0]
+            result = 'Fake' if prediction == 0 else 'Real'
         elif language == 'en':
-            vectorizer = TfidfVectorizer(stop_words='english')
-            text_vector = vectorizer.fit_transform([text])  # transform to numeric
+            vectorizer = TfidfVectorizer(stop_words='english', max_df=0.7)
+            text_vector = vectorizer.transform([text])  # transform to numeric
             prediction = en_model.predict(text_vector)[0]
+            result = 'Fake' if prediction == 0 else 'Real'
         else:
             return jsonify({'error': 'Unsupported language'}), 400
 
-        result = 'Fake' if prediction == 1 else 'Real'
         return jsonify({'prediction': result})
 
     except Exception as e:
